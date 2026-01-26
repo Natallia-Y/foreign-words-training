@@ -70,12 +70,11 @@ const btnNavigation = document.querySelector(".slider-controls");
 const studyMode = document.querySelector("#study-mode");
 const examMode = document.querySelector("#exam-mode");
 const progressSliderExam = document.querySelector("#exam-progress");
-const percentageAnsweredCorrectly = document.querySelector("#correct-percent")
+const scaleProgressExam = document.querySelector("#correct-percent")
 const timer = document.querySelector("#time");
 
 let currentIndex = 0;
 let matchedPairs = 0;
-let amountAttempts = 0;
 
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -177,7 +176,6 @@ function handleExamCard(event) {
     firstChosenCard = clickedCard;
     firstChosenCard.classList.add("correct");
   } else {
-    amountAttempts++;
 
     const secondChosenCard = clickedCard;
 
@@ -215,16 +213,14 @@ function updateStats() {
   const percentProgress = Math.round((matchedPairs / currentState.length) * 100);
   progressSliderExam.value = percentProgress;
 
-  const accuracyPercent = amountAttempts > 0 ? Math.round((matchedPairs / amountAttempts) * 100) : 100;
-  percentageAnsweredCorrectly.textContent = `${accuracyPercent}%`;
+  scaleProgressExam.textContent = `${percentProgress}%`;
 }
 
 function showResults() {
   if (matchedPairs === currentState.length) {
     examTimer.stop();
     setTimeout(() => {
-      alert(`Поздравляем! Режим проверки знаний окончен. Вы нашли все пары за: ${examTimer.formattedTime}. 
-        Ваша эффективность: ${percentageAnsweredCorrectly.textContent}.`);
+      alert(`Поздравляем! Режим проверки знаний окончен. Ваше время проверки составило: ${examTimer.formattedTime}.`);
     }, 1000);
   }
 }
@@ -265,7 +261,6 @@ document.addEventListener("DOMContentLoaded", function () {
     examMode.classList.remove("hidden");
 
     matchedPairs = 0;
-    amountAttempts = 0;
     updateStats();
     renderAllCards();
     examTimer.start();
