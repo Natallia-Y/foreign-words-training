@@ -110,6 +110,10 @@ get formattedTime() {
   return this._displayElement.textContent;
 }
 
+get totalSeconds() {
+  return this._totalSeconds;
+}
+
 _updateTimer() {
   let minutes = Math.floor(this._totalSeconds / 60);
   let seconds = this._totalSeconds % 60;
@@ -210,22 +214,57 @@ function handleExamCard(event) {
 }
 
 function updateStats() {
-  const percentProgress = Math.round((matchedPairs / currentState.length) * 100);
-  progressSliderExam.value = percentProgress;
+  const currentProgress = Math.round((matchedPairs / currentState.length) * 100);
 
-  scaleProgressExam.textContent = `${percentProgress}%`;
+  progressSliderExam.value = currentProgress;
+  scaleProgressExam.textContent = `${currentProgress}%`;
 }
 
 function showResults() {
   if (matchedPairs === currentState.length) {
     examTimer.stop();
+
+    const bestLastTime = localStorage.getItem('bestTime') || Infinity;
+    const currentTime = examTimer.totalSeconds;
+
+    if(currentTime < bestLastTime) {
+      localStorage.setItem('bestTime', currentTime);
+      alert("Новый рекорд!");
+    }
+
     setTimeout(() => {
       alert(`Поздравляем! Режим проверки знаний окончен. Ваше время проверки составило: ${examTimer.formattedTime}.`);
     }, 1000);
   }
 }
 
+function savedStudyProgress() {
+  const data = {
+    index: currentIndex,
+    state: currentState
+  }
+
+  localStorage.setItem('studyProgress', JSON.stringify(data));
+}
+
+function loadStudyProgress() {
+  const savedProgress = localStorage.getItem('studyProgress');
+
+  if(savedProgress) {
+    const data = JSON.parse(savedProgress);
+
+    if(data.state.length !== words.length) {
+      localStorage.removeItem('studyProgress');
+      return;
+    }
+
+    currentIndex = data.index;
+    currentState = data.state;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+  loadStudyProgress();
   renderCard(currentIndex);
 
   container.addEventListener("click", handleExamCard);
@@ -238,6 +277,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (currentIndex < currentState.length - 1) {
       currentIndex++;
       renderCard(currentIndex);
+      savedStudyProgress();
     }
   });
 
@@ -245,6 +285,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (currentIndex > 0) {
       currentIndex--;
       renderCard(currentIndex);
+      savedStudyProgress();
     }
   });
 
@@ -252,6 +293,7 @@ document.addEventListener("DOMContentLoaded", function () {
     shuffle(currentState);
     currentIndex = 0;
     renderCard(currentIndex);
+    savedStudyProgress();
   });
 
   examBtn.addEventListener("click", function () {
